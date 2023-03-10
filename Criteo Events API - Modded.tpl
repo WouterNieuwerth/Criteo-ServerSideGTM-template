@@ -92,13 +92,13 @@ ___SANDBOXED_JS_FOR_SERVER___
 
 // Imports
 const sendHttpRequest = require('sendHttpRequest');
-const getAllEventData = require('getAllEventData');
 const getEventData = require('getEventData');
 const getTimestampMillis = require('getTimestampMillis');
 const JSON = require('JSON');
 const getCookieValues = require('getCookieValues');
 const logToConsole = require('logToConsole');
 const parseUrl = require('parseUrl');
+const Math = require('Math');
 
 
 //--------- EDIT w.nieuwerth@adwise.nl
@@ -106,6 +106,8 @@ const parseUrl = require('parseUrl');
 function getCriteoEventName(gtmEventName) {
   
   let e;
+  let timestamp_millis = getTimestampMillis();
+  let timestamp_unix = Math.round(timestamp_millis / 1000);
   
   switch (gtmEventName) {
       
@@ -113,33 +115,33 @@ function getCriteoEventName(gtmEventName) {
       if (parseUrl(getEventData('page_location')).pathname === '/') {
         e = {
           'event': 'viewHome',
-          'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z"
+          'timestamp': timestamp_unix
         };
       } else {
         e = {
           'event': 'viewPage',
-          'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z"
+          'timestamp': timestamp_unix
         };
       }
       break;
     case 'view_item_list': 
       e = {
         'event': 'viewList',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'item': getEventData('items').map(item => item.item_id)
       };
       break;
     case 'view_item': 
       e = {
         'event': 'viewItem',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'item': getEventData('items').map(item => item.item_id)
       };
       break;
     case 'add_to_cart': 
       e = {
         'event': 'addToCart',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'currency': data.currency || undefined,
         'item': getEventData('items').map(item => ({
           'id': item.item_id,
@@ -151,7 +153,7 @@ function getCriteoEventName(gtmEventName) {
     case 'view_cart': 
       e = {
         'event': 'viewBasket',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'currency': data.currency || undefined,
         'item': getEventData('items').map(item => ({
           'id': item.item_id,
@@ -163,7 +165,7 @@ function getCriteoEventName(gtmEventName) {
     case 'begin_checkout': 
       e = {
         'event': 'beginCheckout',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'currency': data.currency || undefined,
         'item': getEventData('items').map(item => ({
           'id': item.item_id,
@@ -175,7 +177,7 @@ function getCriteoEventName(gtmEventName) {
     case 'add_payment_info': 
       e = {
         'event': 'addPaymentInfo',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'currency': data.currency || undefined,
         'item': getEventData('items').map(item => ({
           'id': item.item_id,
@@ -187,7 +189,7 @@ function getCriteoEventName(gtmEventName) {
     case 'purchase': 
       e = {
         'event': 'trackTransaction',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z",
+        'timestamp': timestamp_unix,
         'id': getEventData('transaction_id'),
         'currency': data.currency || undefined,
         'item': getEventData('items').map(item => ({
@@ -200,7 +202,7 @@ function getCriteoEventName(gtmEventName) {
     case 'login': 
       e = {
         'event': 'login',
-        'timestamp': getEventData('hit_timestamp').substring(0,19)+"Z"
+        'timestamp': timestamp_unix
       };
       break;
     default: e = {'event': gtmEventName};
@@ -219,13 +221,12 @@ events.push(getCriteoEventName(getEventData('event_name')));
 
 
 // Constants (do not forget to update the version)
-const tagVersion = 'criteo_sgtm_customized_by_adwise_0.0.2';
+const tagVersion = 'criteo_sgtm_customized_by_adwise_0.0.3';
 const COOKIE_NAME = "crto_mapped_user_id";
 const OPTOUT_COOKIE = "crto_is_user_optout";
 
 // Implementation
 const postHeaders = {'Content-Type': 'application/json'};
-const mappingId = data.applicationId + '.' + getEventData('event_name'); // edited
 const urlToCall = 'https://widget.criteo.com/m/event?version=s2s_v0';
 var criteoMappedUserId = getCookieValues(COOKIE_NAME)[0];
 var isUserOptOut = getCookieValues(OPTOUT_COOKIE)[0];
